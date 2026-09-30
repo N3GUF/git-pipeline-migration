@@ -17,7 +17,7 @@ from .commands import apply_command_replacements, load_command_replacements
 from .job_walker import iter_jobs
 from .prefixes import apply_prefix_stripping
 
-PROG_NAME = "cfn-git-pipeline-migration"
+PROG_NAME = "git-pipeline-migration"
 LOG_FILE = f"{PROG_NAME}.log"
 
 logger = logging.getLogger(__name__)

@@ -11,7 +11,7 @@ A CLI that migrates Control-M folder/job definition exports (JSON): it replaces 
 ```bash
 uv sync                      # install/update the venv from pyproject.toml + uv.lock
 
-uv run cfn-git-pipeline-migration \
+uv run git-pipeline-migration \
   --jobs-json data/cfnauth_jobs.json \
   --commands-csv commands.csv \
   --output-json data/cfnauth_jobs_updated.json \
@@ -24,13 +24,13 @@ uv run ruff format --check . # verify formatting
 
 The CSV must have columns `Existing Command Line` and `New Command Line Path` (other columns, e.g. Host/Server/Job Name, are ignored — matching is by command text only). A row is a no-op (no update applied) when the new command is blank or identical to the existing one. Read with `utf-8-sig` to tolerate a BOM from Excel exports (see `data/cfn_auth_controlm_jobs(Sheet1).csv` for a real example).
 
-All `logging` output is written to `cfn-git-pipeline-migration.log` in the current working directory (appended across runs, not overwritten); only the three summary counts are printed to the console.
+All `logging` output is written to `git-pipeline-migration.log` in the current working directory (appended across runs, not overwritten); only the three summary counts are printed to the console.
 
 No test suite is configured yet.
 
 ## Architecture
 
-Package: `src/cfn_git_pipeline_migration/` (src layout, entry point `cfn-git-pipeline-migration` defined in `pyproject.toml` under `[project.scripts]`, pointing at `cfn_git_pipeline_migration:main` which re-exports `cli.main`).
+Package: `src/git_pipeline_migration/` (src layout, entry point `git-pipeline-migration` defined in `pyproject.toml` under `[project.scripts]`, pointing at `git_pipeline_migration:main` which re-exports `cli.main`).
 
 Processing order matters and is fixed in `cli.main`: **commands are replaced before prefixes are stripped.**
 

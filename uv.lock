@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.13"
 
 [[package]]
-name = "cfn-git-pipeline-migration"
+name = "git-pipeline-migration"
 version = "0.1.0"
 source = { editable = "." }
 

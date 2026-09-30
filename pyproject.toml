@@ -3,17 +3,17 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cfn-git-pipeline-migration"
+name = "git-pipeline-migration"
 version = "0.1.0"
 description = "Migrate Control-M folder/job definitions: replace job commands from a CSV mapping and strip legacy job-name prefixes."
 requires-python = ">=3.13"
 dependencies = []
 
 [project.scripts]
-cfn-git-pipeline-migration = "cfn_git_pipeline_migration:main"
+git-pipeline-migration = "git_pipeline_migration:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cfn_git_pipeline_migration"]
+packages = ["src/git_pipeline_migration"]
 
 [dependency-groups]
 dev = [

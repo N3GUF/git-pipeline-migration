@@ -21,3 +21,5 @@ wheels/
 # Job/folder data (contains real internal hostnames and paths)
 data/*.json
 data/*.csv
+data/*.xlsx
+data/*.xlsx.bak

@@ -7,13 +7,16 @@ name = "git-pipeline-migration"
 version = "0.1.0"
 description = "Migrate Control-M folder/job definitions: replace job commands from a CSV mapping and strip legacy job-name prefixes."
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "openpyxl>=3.1",
+]
 
 [project.scripts]
 git-pipeline-migration = "git_pipeline_migration:main"
+xlsx-path-updater = "xlsx_path_updater:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/git_pipeline_migration"]
+packages = ["src/git_pipeline_migration", "src/xlsx_path_updater"]
 
 [dependency-groups]
 dev = [

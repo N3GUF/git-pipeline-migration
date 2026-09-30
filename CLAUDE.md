@@ -4,7 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A CLI that migrates Control-M folder/job definition exports (JSON): it replaces job `Command` values per a CSV mapping, then strips legacy job-name prefixes (and matching text in descriptions), writing the result to a new JSON file. Every job touched by either step gets the CLI's `--update-comment` appended to its Description exactly once, even if touched by both.
+Two CLIs sharing one repo/venv:
+
+- `git-pipeline-migration` migrates Control-M folder/job definition exports (JSON): it replaces job `Command` values per a CSV mapping, then strips legacy job-name prefixes (and matching text in descriptions), writing the result to a new JSON file. Every job touched by either step gets the CLI's `--update-comment` appended to its Description exactly once, even if touched by both.
+- `xlsx-path-updater` annotates a separate job-inventory workbook (`.xlsx`, not part of the JSON migration) with two columns, `Original Path` and `Updated Path`, driven by the same commands CSV.
 
 ## Commands
 
@@ -18,13 +21,20 @@ uv run git-pipeline-migration \
   --update-comment "Updated per PRJTASK0190790 CFN Migration" \
   [--log-level DEBUG]
 
+uv run xlsx-path-updater \
+  --xlsx-path "data/CFN Auth Jobs.xlsx" \
+  --commands-csv "data/cfn_auth_controlm_jobs(Sheet1).csv" \
+  [--log-level DEBUG]
+
 uv run ruff check .          # lint
 uv run ruff format --check . # verify formatting
 ```
 
 The CSV must have columns `Existing Command Line` and `New Command Line Path` (other columns, e.g. Host/Server/Job Name, are ignored — matching is by command text only). A row is a no-op (no update applied) when the new command is blank or identical to the existing one. Read with `utf-8-sig` to tolerate a BOM from Excel exports (see `data/cfn_auth_controlm_jobs(Sheet1).csv` for a real example).
 
-All `logging` output is written to `git-pipeline-migration.log` in the current working directory (appended across runs, not overwritten); only the three summary counts are printed to the console.
+`xlsx-path-updater` reads that same CSV via `git_pipeline_migration.commands.load_command_replacements` (no duplicated CSV-parsing logic) and matches rows in the workbook by exact text against its `Command Line` column — no job-name lookup, same matching convention as `git-pipeline-migration` itself. It edits the workbook **in place**: `Original Path` is always set to that row's existing `Command Line` value, and `Updated Path` is set to the CSV's replacement or left blank if that command has no update. Rerunning it is idempotent — it reuses existing `Original Path`/`Updated Path` columns by header name rather than appending duplicates.
+
+Each CLI writes its own `logging` output to `<prog-name>.log` in the current working directory (appended across runs, not overwritten); only summary counts are printed to the console.
 
 No test suite is configured yet.
 
@@ -43,3 +53,5 @@ Processing order matters and is fixed in `cli.main`: **commands are replaced bef
 The input JSON shape is a Control-M export: top-level keys are folders (`Type: SimpleFolder`, etc.) containing job entries (`Type: Job:Command`, etc.) as nested dicts; job entries themselves contain further nested dicts (`Rerun`, `When`, `IfBase:...`) that are *not* jobs or folders — `iter_jobs` relies on the `Type` prefix check to avoid descending into those.
 
 Sample data lives in `data/cfnauth_jobs.json` (real Control-M export, not synthetic).
+
+Package: `src/xlsx_path_updater/` (entry point `xlsx-path-updater`, pointing at `xlsx_path_updater:main` which re-exports `cli.main`). Single-module CLI (`cli.py`) that depends on `openpyxl` and imports `load_command_replacements` from `git_pipeline_migration.commands` rather than re-parsing the CSV. It locates columns by header text in row 1 (`_header_index_map`), adding `Original Path`/`Updated Path` if not already present (`_column_index`), then walks data rows, skipping fully-blank trailing rows, and writes both columns before saving the workbook back to `--xlsx-path`.

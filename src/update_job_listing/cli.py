@@ -17,7 +17,7 @@ import openpyxl
 
 from git_pipeline_migration.commands import load_command_replacements
 
-PROG_NAME = "xlsx-path-updater"
+PROG_NAME = "update-job-listing"
 LOG_FILE = f"{PROG_NAME}.log"
 
 COMMAND_LINE_COLUMN = "Command Line"

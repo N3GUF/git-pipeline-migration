@@ -13,10 +13,10 @@ dependencies = [
 
 [project.scripts]
 git-pipeline-migration = "git_pipeline_migration:main"
-xlsx-path-updater = "xlsx_path_updater:main"
+update-job-listing = "update_job_listing:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/git_pipeline_migration", "src/xlsx_path_updater"]
+packages = ["src/git_pipeline_migration", "src/update_job_listing"]
 
 [dependency-groups]
 dev = [

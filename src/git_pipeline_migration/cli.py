@@ -15,7 +15,6 @@ from pathlib import Path
 
 from .commands import apply_command_replacements, load_command_replacements
 from .job_walker import iter_jobs
-from .prefixes import apply_prefix_stripping
 
 PROG_NAME = "git-pipeline-migration"
 LOG_FILE = f"{PROG_NAME}.log"
@@ -85,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     replacements = load_command_replacements(args.commands_csv)
     jobs_updated = apply_command_replacements(jobs, replacements, args.update_comment)
 
-    jobs_renamed = apply_prefix_stripping(jobs, args.update_comment)
+    # jobs_renamed = apply_prefix_stripping(jobs, args.update_comment)
 
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     with args.output_json.open("w", encoding="utf-8") as f:
@@ -94,12 +93,12 @@ def main(argv: list[str] | None = None) -> int:
 
     logger.info("Jobs read: %d", jobs_read)
     logger.info("Jobs updated (command replaced): %d", jobs_updated)
-    logger.info("Jobs renamed (prefix stripped): %d", jobs_renamed)
+    # logger.info("Jobs renamed (prefix stripped): %d", jobs_renamed)
     logger.info("Updated JSON written to %s", args.output_json)
 
     print(f"Jobs read:                        {jobs_read}")
     print(f"Jobs updated (command replaced):  {jobs_updated}")
-    print(f"Jobs renamed (prefix stripped):   {jobs_renamed}")
+    # print(f"Jobs renamed (prefix stripped):   {jobs_renamed}")
 
     return 0
 

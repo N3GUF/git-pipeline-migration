@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-One CLI:
+Two CLIs:
 
 - `git-pipeline-migration` migrates Control-M folder/job definition exports (JSON): it replaces job `Command` values per a CSV mapping, writing the result to a new JSON file. Every job updated gets the CLI's `--update-comment` appended to its Description exactly once. The legacy job-name prefix stripping stage (`prefixes.py`) is currently **disabled** in `cli.main` (call and reporting commented out); the module is kept so it can be re-enabled.
+- `update-job-inventory` annotates a separate job-inventory workbook (`.xlsx`, not part of the JSON migration) with `Original Path` and `Updated Path` columns.
 
 ## Commands
 
@@ -20,13 +21,21 @@ uv run git-pipeline-migration \
   --update-comment "Updated per PRJTASK0190790 CFN Migration" \
   [--log-level DEBUG]
 
+uv run update-job-inventory \
+  --input "data/CFN Auth Jobs.xlsx" \
+  --output data/CFN_Auth_Jobs_updated.xlsx \
+  [--updated-path /opt/new/dir] \
+  [--log-level DEBUG]
+
 uv run ruff check .          # lint
 uv run ruff format --check . # verify formatting
 ```
 
 The CSV must have columns `Existing Command Line` and `New Command Line Path` (other columns, e.g. Host/Server/Job Name, are ignored — matching is by command text only). A row is a no-op (no update applied) when the new command is blank or identical to the existing one. Read with `utf-8-sig` to tolerate a BOM from Excel exports (see `data/cfn_auth_controlm_jobs(Sheet1).csv` for a real example).
 
-The CLI writes its `logging` output to `<prog-name>.log` in the current working directory (appended across runs, not overwritten); only summary counts are printed to the console.
+`update-job-inventory` fills `Original Path` with the **directory only** (never the file) of the first absolute path (POSIX, `~/`, or Windows drive) found in: `Command Line` when `Task Type` is `Command`; `File Path/Member Library`, falling back to `Embedded Script`, when `Task Type` is `Job`. Rows with no path get a blank value and a logged warning. `--updated-path`, if given, is written to `Updated Path` on every data row; otherwise that column is left untouched. Existing `Original Path`/`Updated Path` headers are reused (found by header text), so reruns don't add duplicate columns; otherwise they are appended on the right. It reads and writes the workbook's active sheet.
+
+Each CLI writes its `logging` output to `<prog-name>.log` in the current working directory (appended across runs, not overwritten); only summary counts are printed to the console.
 
 No test suite is configured yet.
 
@@ -43,5 +52,7 @@ Only the command-replacement stage currently runs in `cli.main`. If prefix strip
 - `cli.py` — runs command replacement only (the prefix-stripping call, its log line and its console line are commented out), configures `logging.basicConfig` to append to `LOG_FILE` (`f"{PROG_NAME}.log"`) at `--log-level`, and reports two counts: jobs read and jobs updated (command replaced). If prefix stripping is re-enabled, it runs *after* command replacement (order doesn't affect the comment logic since it's idempotent either way) and a third "jobs renamed" count returns; the counters are independent, so a job can be counted in either, both, or neither.
 
 The input JSON shape is a Control-M export: top-level keys are folders (`Type: SimpleFolder`, etc.) containing job entries (`Type: Job:Command`, etc.) as nested dicts; job entries themselves contain further nested dicts (`Rerun`, `When`, `IfBase:...`) that are *not* jobs or folders — `iter_jobs` relies on the `Type` prefix check to avoid descending into those.
+
+Package: `src/update_job_inventory/` (entry point `update-job-inventory`, pointing at `update_job_inventory:main` which re-exports `cli.main`). Single-module CLI (`cli.py`) depending on `openpyxl`; it is independent of `git_pipeline_migration`. `first_directory` does the path extraction (regex-based), `update_workbook` locates columns by header text in row 1 and fills the two columns in place.
 
 Sample data lives in `data/cfnauth_jobs.json` (real Control-M export, not synthetic).

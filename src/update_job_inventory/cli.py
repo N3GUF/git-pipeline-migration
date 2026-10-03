@@ -12,6 +12,7 @@ import logging
 import posixpath
 import re
 import sys
+import warnings
 from pathlib import Path
 
 from openpyxl import load_workbook
@@ -123,7 +124,10 @@ def main(argv: list[str] | None = None) -> int:
         filemode="a",
     )
 
-    wb = load_workbook(args.input)
+    with warnings.catch_warnings():
+        # Some exporters omit the default cell style; openpyxl's fallback is harmless here.
+        warnings.filterwarnings("ignore", message="Workbook contains no default style")
+        wb = load_workbook(args.input)
     processed, found = update_workbook(wb.active, args.updated_path)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
